@@ -4,18 +4,26 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.Aggregates;
+import com.mongodb.client.model.Projections;
+import com.mongodb.client.model.mql.MqlInteger;
+import com.mongodb.client.model.mql.MqlInteger.*;
+import com.mongodb.client.model.mql.MqlValues;
 import org.bson.Document;
 
 import java.time.LocalDate;
 import java.util.List;
 
+import static com.mongodb.client.model.Accumulators.avg;
+import static com.mongodb.client.model.Accumulators.sum;
+import static com.mongodb.client.model.Aggregates.*;
 import static com.mongodb.client.model.Filters.*;
-import static com.mongodb.client.model.Projections.fields;
-import static com.mongodb.client.model.Projections.include;
-
+import static com.mongodb.client.model.Projections.*;
+import static com.mongodb.client.model.mql.MqlValues.current;
 
 public class Repaso {
     public static String cc = "mongodb://dam:java@localhost:27017/?authSource=admin&readPreference=primary&ssl=false&directConnection=true";
+
     public static void main(String[] args) {
         /*
         try(MongoClient c= MongoClients.create(cc)){
@@ -39,9 +47,10 @@ public class Repaso {
                     ));
             vuelos.insertOne(d);
         }*/
-        try(MongoClient c= MongoClients.create(cc)){
+        /*
+        try (MongoClient c = MongoClients.create(cc)) {
             MongoDatabase db = c.getDatabase("alumnos");
-            MongoCollection<Document> vuelos=db.getCollection("vuelos");
+            MongoCollection<Document> vuelos = db.getCollection("vuelos");*/
             /*
             Iterable<Document> resultado = vuelos.find(
                     lt("edad",30)
@@ -109,12 +118,135 @@ public class Repaso {
                             include("edad")
                     )
             );*/
+            /*
             Iterable<Document> resultado = vuelos.find(
                 elemMatch("billetes",lt("fecha", LocalDate.of(2023,4,1)))
             );
             for(Document d:resultado){
                 System.out.println(d);
+            }*/
+            /*
+            Iterable<Document> resultado = vuelos.aggregate(List.of(
+                            project(
+                                    fields(
+                                            computed("lineadni",current().getDocument("dni").getInteger("numero").asString()
+                                                    .append(
+                                                            MqlValues.of("-")
+                                                    )
+                                                    .append(
+                                                    current().getDocument("dni").getString("letra")
+                                            )),
+                                            include("nombre", "edad"),
+                                            exclude("_id")
+
+                                    )
+                            )
+                    )
+            );
+            for(Document d:resultado){
+                System.out.println(d);
             }
+            */
+            /*
+            Iterable<Document> resultado = vuelos.aggregate(List.of(
+                    match(
+                            or(
+                                    eq("billetes.origen","Granada"),
+                                    eq("billetes.destino","Granada")
+                            )
+                    ),
+                    group(
+                            1, avg("media edad",current().getField("edad"))
+                    )
+            ));
+            for(Document d:resultado){
+                System.out.println(d);
+            }
+*/
+            /*
+            Iterable<Document> resultado = vuelos.aggregate(List.of(
+                    unwind("$billetes"),
+                    group(1, sum("pasajeros",1)
+                    )
+            ));
+            for(Document d:resultado){
+                System.out.println(d);
+            }
+        }*/
+        try (MongoClient c = MongoClients.create(cc)) {
+            MongoDatabase db = c.getDatabase("repaso");
+            MongoCollection<Document> cine = db.getCollection("cine");
+            /*
+            Iterable<Document> resultado = cine.find(
+                    in("proyecciones",  "Camelot")
+            );
+            for(Document d:resultado){
+                System.out.println(d);
+            }*/
+            /*
+            Iterable<Document> resultado = cine.aggregate(List.of(
+                    match(
+                            in("proyecciones",  "Camelot")
+                    ),
+                    project(
+                            fields(
+                                    computed("sala", MqlValues.of("sala ")
+                                         .append(current().getInteger("_id").asString())),
+                                    exclude("_id")
+                            )
+                    )
+
+                )
+            );
+            for(Document d:resultado){
+                System.out.println(d);
+            }*/
+            /*
+            Iterable<Document> resultado = cine.aggregate(List.of(
+                    match(
+                            gt(
+                                    divide("$capacidad", multiply("$ocupados",100))
+                            )
+                    ),
+                    project(
+                            include("_id")
+                    )
+            ));*/
+            /*
+            Iterable<Document> resultado = cine.aggregate(
+                    List.of(
+                            project(
+                                    fields(
+                                            computed(
+                                                    "capacidadPorcentaje",current().getInteger("ocupados").multiply(100)
+                                                            .divide(current().getInteger("capacidad"))
+                                            ),
+                                            include("_id")
+                                    )
+                            ),
+                            match(
+                                    gt("capacidadPorcentaje",50)
+                            )
+                    )
+                    );
+            for(Document d:resultado){
+                System.out.println(d);
+            }*/
+            /*
+            Iterable<Document> resultado = cine.find(
+                    and(
+                            in("proyecciones", "Hook"),
+                            in("proyecciones", "Los Minions"),
+                            eq("extras.imax", true)
+
+                    )
+            );
+            for (Document d : resultado) {
+                System.out.println(d);
+            }*/
+            Iterable<Document> resultado = cine.aggregate(List.of(
+
+            ));
         }
     }
 }
